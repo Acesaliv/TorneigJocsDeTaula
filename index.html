@@ -1,0 +1,382 @@
+<!doctype html>
+<html lang="ca">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Gestor de Tornejos de Jocs de Taula</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- Header principal -->
+  <header class="app-header">
+    <div class="header-content">
+      <div class="brand">
+        <span class="logo-icon">🎲</span>
+        <div>
+          <h1>Gestor de Tornejos</h1>
+          <p class="subtitle">Jocs de Taula · Repartiment de taules, torns i puntuacions</p>
+        </div>
+      </div>
+      <div class="header-status" id="headerStatus">
+        <span class="status-badge ready">Configurant jugadors</span>
+      </div>
+    </div>
+
+    <!-- Navegació per pestanyes -->
+    <nav class="nav-tabs" role="tablist">
+      <button class="tab-btn active" data-tab="tab-participants" role="tab" id="navParticipants">
+        <span class="tab-icon">📋</span> 1. Participants
+      </button>
+      <button class="tab-btn" data-tab="tab-config" role="tab" id="navConfig">
+        <span class="tab-icon">⚙️</span> 2. Configuració
+      </button>
+      <button class="tab-btn" data-tab="tab-rounds" role="tab" id="navRounds" disabled>
+        <span class="tab-icon">⚔️</span> 3. Taules & Rondes
+      </button>
+      <button class="tab-btn" data-tab="tab-leaderboard" role="tab" id="navLeaderboard" disabled>
+        <span class="tab-icon">🏆</span> 4. Classificació
+      </button>
+    </nav>
+  </header>
+
+  <main class="main-container">
+    <!-- PESTANYA 1: PARTICIPANTS I FITXER DE CONFIGURACIÓ -->
+    <section id="tab-participants" class="tab-pane active" role="tabpanel">
+      <!-- Panell d'arxius de configuració -->
+      <div class="card file-management-card">
+        <div class="card-header">
+          <div>
+            <h2>Fitxer de configuració de participants</h2>
+            <p class="text-muted">Desa i carrega fàcilment la llista completa de participants des d'un fitxer al teu ordinador.</p>
+          </div>
+          <div class="file-actions">
+            <input type="file" id="fileInput" accept=".json,.txt" class="hidden-file-input" />
+            <button id="btnLoadFile" class="btn btn-outline">
+              <span>📂</span> Carregar fitxer (.json / .txt)
+            </button>
+            <button id="btnSaveFile" class="btn btn-outline">
+              <span>💾</span> Descarregar fitxer (.json)
+            </button>
+            <button id="btnLoadExample" class="btn btn-outline">
+              <span>🔄</span> Exemple 16 jugadors
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Formulari d'afegir participants -->
+      <div class="card">
+        <div class="card-header">
+          <h3>Afegir nous participants al cens</h3>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button id="btnOpenPairModal" class="btn btn-sm btn-outline" type="button">
+              <span>🔗</span> Gestionar parelles
+            </button>
+            <button id="btnOpenBulkModal" class="btn btn-sm btn-outline" type="button">
+              <span>📝</span> Afegir varis en bloc
+            </button>
+          </div>
+        </div>
+        <form id="addParticipantForm" class="add-player-form">
+          <div class="form-group flex-1">
+            <label for="playerNameInput">Nom del jugador</label>
+            <input type="text" id="playerNameInput" placeholder="Ex: Maria, Jordi, Anna..." required />
+          </div>
+          <div class="form-group checkbox-group">
+            <label class="custom-checkbox">
+              <input type="checkbox" id="playerSpecialInput" />
+              <span class="checkmark"></span>
+              <span class="label-text">⭐ Rol especial (explicador/dinamitzador)</span>
+            </label>
+          </div>
+          <button type="submit" class="btn btn-primary">
+            <span>➕</span> Afegir al cens
+          </button>
+        </form>
+      </div>
+
+      <!-- Llista de participants amb selecció de torneig -->
+      <div class="card">
+        <div class="selection-bar">
+          <div class="selection-stats">
+            <div class="stat-badge">
+              <span class="stat-number" id="selectedCount">0</span>
+              <span class="stat-label">Seleccionats per al torneig</span>
+            </div>
+            <div class="stat-secondary">
+              Total al cens: <strong id="totalPoolCount">0</strong> | Rols especials: <strong id="specialSelectedCount">0</strong> | Parelles: <strong id="pairsCount">0</strong>
+            </div>
+          </div>
+          <div class="quick-selectors">
+            <span class="quick-label">Selecció ràpida:</span>
+            <button id="btnSelectAll" class="btn btn-sm btn-ghost">Tots</button>
+            <button id="btnDeselectAll" class="btn btn-sm btn-ghost">Cap</button>
+            <button id="btnSelect12" class="btn btn-sm btn-ghost">Primers 12</button>
+            <button id="btnSelect16" class="btn btn-sm btn-ghost">Primers 16</button>
+          </div>
+        </div>
+
+        <div id="selectionNotice" class="alert alert-info">
+          <span>ℹ️</span>
+          <span id="noticeText">Selecciona els jugadors que participaran en el torneig marcant la casella corresponent.</span>
+        </div>
+
+        <!-- Graella de participants -->
+        <div class="participants-grid" id="participantsList">
+          <!-- Es generarà dinàmicament -->
+        </div>
+
+        <div class="tab-bottom-actions">
+          <button id="btnProceedToConfig" class="btn btn-success btn-lg">
+            <span>Continuar a la Configuració</span> ➔
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- PESTANYA 2: CONFIGURACIÓ DEL TORNEIG -->
+    <section id="tab-config" class="tab-pane" role="tabpanel">
+      <div class="card">
+        <div class="card-header">
+          <h2>Paràmetres del Torneig</h2>
+          <p class="text-muted">Ajusta el nombre de taules, jocs i rondes segons els jugadors seleccionats.</p>
+        </div>
+
+        <div class="config-summary-box">
+          <div class="config-stat">
+            <span class="config-stat-val" id="cfgPlayerCount">0</span>
+            <span class="config-stat-lbl">Jugadors convocats</span>
+          </div>
+          <div class="config-stat">
+            <span class="config-stat-val" id="cfgTableCount">0</span>
+            <span class="config-stat-lbl">Taules previstes</span>
+          </div>
+          <div class="config-stat">
+            <span class="config-stat-val" id="cfgPlayersPerTable">4</span>
+            <span class="config-stat-lbl">Jugadors / taula</span>
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="tableSizeSelect">Mida desitjada de cada taula</label>
+            <select id="tableSizeSelect" class="form-control">
+              <option value="4" selected>4 jugadors per taula (recomanat)</option>
+              <option value="3">3 jugadors per taula</option>
+              <option value="5">5 jugadors per taula</option>
+            </select>
+            <small class="form-help">Si el nombre de jugadors no és múltiple exacte, s'ajustarà la darrera taula.</small>
+          </div>
+
+          <div class="form-group">
+            <label for="numRoundsInput">Nombre de Rondes</label>
+            <input type="number" id="numRoundsInput" min="1" max="10" value="3" class="form-control" />
+            <small class="form-help">Normalment 3 rondes perquè tothom pugui passar per diferents jocs.</small>
+          </div>
+
+          <div class="form-group">
+            <label for="roundMinutesInput">Temps per ronda (minuts)</label>
+            <input type="number" id="roundMinutesInput" min="5" max="180" value="45" class="form-control" />
+            <small class="form-help">Per al cronòmetre de la sala.</small>
+          </div>
+        </div>
+
+        <!-- Configuració dels jocs de cada taula -->
+        <div class="table-games-section">
+          <h3>Jocs de Taula assignats a cada taula</h3>
+          <p class="text-muted">Pots indicar quin joc es jugarà a cada taula (opcional):</p>
+          <div id="tableGamesList" class="table-games-grid">
+            <!-- Es genera automàticament segons el nombre de taules -->
+          </div>
+        </div>
+
+        <div class="tab-bottom-actions">
+          <button id="btnBackToParticipants" class="btn btn-outline btn-lg">
+            ⬅ Tornar a Participants
+          </button>
+          <button id="btnGenerateTournament" class="btn btn-success btn-lg">
+            <span>🚀 Començar Torneig i Generar Taules</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- PESTANYA 3: TAULES I RONDES -->
+    <section id="tab-rounds" class="tab-pane" role="tabpanel">
+      <!-- Barra superior de ronda i cronòmetre -->
+      <div class="round-control-bar card">
+        <div class="round-nav">
+          <button id="btnPrevRound" class="btn btn-outline" title="Ronda anterior">◀ Ronda anterior</button>
+          <div class="current-round-display">
+            <span class="round-badge" id="roundIndicator">Ronda 1</span>
+            <span class="round-total-sub" id="roundTotalSub">de 3 rondes</span>
+          </div>
+          <button id="btnNextRound" class="btn btn-outline" title="Ronda següent">Ronda següent ▶</button>
+        </div>
+
+        <!-- Temporitzador de sala -->
+        <div class="timer-widget">
+          <div class="timer-display" id="timerDisplay">45:00</div>
+          <div class="timer-controls">
+            <button id="btnTimerToggle" class="btn btn-sm btn-primary">▶ Iniciar</button>
+            <button id="btnTimerReset" class="btn btn-sm btn-outline">↺ Reiniciar</button>
+          </div>
+        </div>
+
+        <div class="round-actions">
+          <button id="btnSaveCurrentScores" class="btn btn-success">
+            <span>💾</span> Desar puntuacions
+          </button>
+          <button id="btnProjectorMode" class="btn btn-outline" title="Mode projector">
+            <span>🖥️</span> Pantalla gran
+          </button>
+        </div>
+      </div>
+
+      <!-- Contingut de les taules -->
+      <div id="roundTablesContainer" class="tables-grid">
+        <!-- Es generarà dinàmicament per cada taula -->
+      </div>
+    </section>
+
+    <!-- PESTANYA 4: CLASSIFICACIÓ -->
+    <section id="tab-leaderboard" class="tab-pane" role="tabpanel">
+      <!-- Podi Top 3 -->
+      <div class="podium-card card" id="podiumContainer">
+        <!-- Es genera dinàmicament -->
+      </div>
+
+      <!-- Taula completa de puntuacions -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h2>Taula de Classificació General</h2>
+            <p class="text-muted">Puntuacions acumulades i detall per ronda.</p>
+          </div>
+          <div class="leaderboard-export-actions">
+            <button id="btnPrintLeaderboard" class="btn btn-outline">
+              <span>🖨️</span> Imprimir / PDF
+            </button>
+            <button id="btnExportCSV" class="btn btn-outline">
+              <span>📊</span> Exportar CSV (Excel)
+            </button>
+            <button id="btnExportFullJSON" class="btn btn-outline">
+              <span>💾</span> Descarregar Torneig (JSON)
+            </button>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="leaderboard-table" id="leaderboardTable">
+            <thead>
+              <tr id="leaderboardHeadRow">
+                <th>#</th>
+                <th>Participant</th>
+                <th>Rol</th>
+                <th>R1</th>
+                <th>R2</th>
+                <th>R3</th>
+                <th>Punts Totals</th>
+              </tr>
+            </thead>
+            <tbody id="leaderboardBody">
+              <!-- Files generades dinàmicament -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- DIÀLEG MODAL PER INTERCANVIAR JUGADORS -->
+  <dialog id="swapModal" class="app-dialog">
+    <div class="dialog-content">
+      <div class="dialog-header">
+        <h3>Intercanviar lloc / seient</h3>
+        <button id="btnCloseSwapModal" class="btn-close" aria-label="Tancar">&times;</button>
+      </div>
+      <div class="dialog-body">
+        <p>Estàs canviant de posició a: <strong id="swapPlayerSourceName">-</strong></p>
+        <div class="form-group">
+          <label for="swapTargetSelect">Tria el jugador amb qui vols intercanviar:</label>
+          <select id="swapTargetSelect" class="form-control">
+            <option value="">-- Selecciona un jugador --</option>
+          </select>
+        </div>
+      </div>
+      <div class="dialog-footer">
+        <button id="btnCancelSwap" class="btn btn-outline">Cancel·lar</button>
+        <button id="btnConfirmSwap" class="btn btn-primary">Confirmar Intercanvi</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- DIÀLEG MODAL PER AFEGIR NOMS EN BLOC -->
+  <dialog id="bulkAddModal" class="app-dialog">
+    <div class="dialog-content">
+      <div class="dialog-header">
+        <h3>Afegir participants en bloc</h3>
+        <button id="btnCloseBulkModal" class="btn-close" aria-label="Tancar">&times;</button>
+      </div>
+      <div class="dialog-body">
+        <p class="text-muted">Enganxa una llista de noms (un nom per línia). Si vols marcar un nom com a rol especial, afegeix un asterisc <code>*</code> al final del nom (ex: <code>Marc*</code>).</p>
+        <div class="form-group">
+          <textarea id="bulkNamesTextarea" rows="8" class="form-control" placeholder="Marc*&#10;Laia*&#10;Jordi&#10;Mireia&#10;Pau"></textarea>
+        </div>
+      </div>
+      <div class="dialog-footer">
+        <button id="btnCancelBulk" class="btn btn-outline">Cancel·lar</button>
+        <button id="btnConfirmBulk" class="btn btn-success">Afegir participants</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- DIÀLEG MODAL PER GESTIONAR PARELLES -->
+  <dialog id="pairModal" class="app-dialog">
+    <div class="dialog-content">
+      <div class="dialog-header">
+        <h3>Gestionar parelles inseparables</h3>
+        <button id="btnClosePairModal" class="btn-close" aria-label="Tancar">&times;</button>
+      </div>
+      <div class="dialog-body">
+        <p class="text-muted">Els participants que formin una parella aniran <strong>sempre junts a la mateixa taula</strong> al llarg de tot el torneig.</p>
+        
+        <div class="card" style="margin:14px 0;padding:14px;background:var(--bg-subtle)">
+          <h4 style="font-size:0.95rem;margin-bottom:10px">Crear nova parella:</h4>
+          <div class="form-grid" style="grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+            <div class="form-group">
+              <label for="pairSelect1">Primer participant</label>
+              <select id="pairSelect1" class="form-control">
+                <option value="">-- Tria jugador 1 --</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="pairSelect2">Segon participant</label>
+              <select id="pairSelect2" class="form-control">
+                <option value="">-- Tria jugador 2 --</option>
+              </select>
+            </div>
+          </div>
+          <button id="btnCreatePair" class="btn btn-sm btn-primary" style="width:100%" type="button">
+            <span>🔗</span> Vincular com a parella
+          </button>
+        </div>
+
+        <h4 style="font-size:0.95rem;margin:14px 0 8px">Parelles formades:</h4>
+        <div id="existingPairsList" class="existing-pairs-list">
+          <!-- Generat dinàmicament -->
+        </div>
+      </div>
+      <div class="dialog-footer">
+        <button id="btnClosePairModalBottom" class="btn btn-outline" type="button">Tancar</button>
+      </div>
+    </div>
+  </dialog>
+
+  <footer class="app-footer">
+    <p>Gestor de Tornejos de Jocs de Taula · Dades desades automàticament a la memòria local del navegador.</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

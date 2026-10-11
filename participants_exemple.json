@@ -1,0 +1,18 @@
+[
+  { "id": "p1", "name": "Marc", "isSpecial": true, "selected": true, "pairId": null },
+  { "id": "p2", "name": "Laia", "isSpecial": true, "selected": true, "pairId": null },
+  { "id": "p3", "name": "Jordi", "isSpecial": true, "selected": true, "pairId": "pair_1" },
+  { "id": "p4", "name": "Mireia", "isSpecial": false, "selected": true, "pairId": "pair_1" },
+  { "id": "p5", "name": "Pau", "isSpecial": false, "selected": true, "pairId": null },
+  { "id": "p6", "name": "Anna", "isSpecial": false, "selected": true, "pairId": null },
+  { "id": "p7", "name": "Oriol", "isSpecial": false, "selected": true, "pairId": null },
+  { "id": "p8", "name": "Clara", "isSpecial": false, "selected": true, "pairId": null },
+  { "id": "p9", "name": "Pol", "isSpecial": false, "selected": true, "pairId": null },
+  { "id": "p10", "name": "Núria", "isSpecial": false, "selected": true, "pairId": null },
+  { "id": "p11", "name": "Arnau", "isSpecial": false, "selected": true, "pairId": null },
+  { "id": "p12", "name": "Berta", "isSpecial": false, "selected": true, "pairId": null },
+  { "id": "p13", "name": "David", "isSpecial": false, "selected": false, "pairId": null },
+  { "id": "p14", "name": "Laura", "isSpecial": false, "selected": false, "pairId": null },
+  { "id": "p15", "name": "Sergi", "isSpecial": false, "selected": false, "pairId": null },
+  { "id": "p16", "name": "Judit", "isSpecial": false, "selected": false, "pairId": null }
+]

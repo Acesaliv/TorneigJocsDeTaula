@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="ca">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Torneig 12 jugadors — Gestor</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header>
+    <h1>Torneig 12 jugadors</h1>
+  </header>
+
+  <main>
+    <section id="setup">
+      <h2>1) Introdueix 12 noms</h2>
+      <div id="names">
+        <!-- dynamic inputs -->
+      </div>
+      <div class="row">
+        <button id="assignBtn">Assignar aleatòriament números</button>
+        <button id="startBtn">Començar torneig</button>
+      </div>
+      <p class="muted">Marca 3 jugadors amb rol especial (s'han d'ubicar a taules diferents cada ronda).</p>
+    </section>
+
+    <section id="controls" class="hidden">
+      <div class="row">
+        <button id="prevRound">Ronda anterior</button>
+        <span id="roundLabel">Ronda 1</span>
+        <button id="nextRound">Següent ronda</button>
+      </div>
+      <div class="row">
+        <button id="saveScores">Guardar puntuacions ronda</button>
+      </div>
+    </section>
+
+    <section id="tables" class="hidden">
+      <div id="tableContainer"></div>
+    </section>
+
+    <section id="summary" class="hidden">
+      <h2>Classificació</h2>
+      <table id="leaderboard">
+        <thead><tr><th>Nom</th><th>Total</th><th>R1</th><th>R2</th><th>R3</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </section>
+
+  </main>
+
+  <template id="seatTpl">
+    <div class="seat">
+      <div class="badge"></div>
+      <div class="info">
+        <div class="name"></div>
+        <div class="meta"></div>
+      </div>
+      <div class="scoreInput">
+        <input type="number" step="1" class="score" />
+      </div>
+      <div class="swap">Intercanviar</div>
+    </div>
+  </template>
+
+  <!-- Swap modal -->
+  <div id="swapModal" class="modal hidden">
+    <div class="modal-content">
+      <h3>Intercanviar posició</h3>
+      <p>Tria el jugador amb qui intercanviar números:</p>
+      <select id="swapSelect" style="width:100%;padding:8px;margin:8px 0"></select>
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button id="swapCancel">Cancel·lar</button>
+        <button id="swapConfirm">Intercanviar</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

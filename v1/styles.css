@@ -1,0 +1,38 @@
+:root{--red:#e74c3c;--blue:#3498db;--green:#27ae60;--muted:#666}
+*{box-sizing:border-box;font-family:Segoe UI,Arial,Helvetica,sans-serif}
+body{margin:16px;background:#f7f7f8;color:#111}
+header h1{margin:0 0 12px}
+main{max-width:980px;margin:0 auto}
+.row{display:flex;gap:8px;align-items:center;margin:8px 0}
+button{padding:8px 12px;border-radius:6px;border:1px solid #ccc;background:white;cursor:pointer}
+.muted{color:var(--muted);font-size:0.9rem}
+#names{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.nameInput{display:flex;flex-direction:column}
+.nameInput input{padding:6px}
+.nameInput label{font-size:0.8rem;margin-bottom:4px}
+.hidden{display:none}
+#tableContainer{display:flex;gap:16px;margin-top:16px}
+.table{flex:1;background:white;padding:12px;border-radius:8px;border:1px solid #e1e1e1}
+.table h3{margin-top:0}
+.seat{display:flex;align-items:center;gap:8px;padding:6px;border-radius:6px;margin-bottom:6px;border:1px dashed #eee}
+.badge{width:48px;height:48px;display:flex;align-items:center;justify-content:center;font-weight:bold;color:white;border-radius:6px}
+.badge.square{border-radius:6px}
+.badge.circle{border-radius:50%}
+.badge.pentagon{clip-path:polygon(50% 0%, 95% 35%, 78% 100%, 22% 100%, 5% 35%)}
+.badge.red{background:var(--red)}
+.badge.blue{background:var(--blue)}
+.badge.green{background:var(--green)}
+.info{flex:1}
+.info .name{font-weight:600}
+.info .meta{font-size:0.85rem;color:#444}
+.scoreInput input{width:80px;padding:6px}
+.swap{background:#f0f0f0;padding:6px;border-radius:6px;cursor:pointer}
+table#leaderboard{width:100%;border-collapse:collapse;margin-top:12px}
+table#leaderboard th,table#leaderboard td{padding:6px;border:1px solid #eee;text-align:left}
+
+/* Modal styles for swap UI */
+.modal{position:fixed;inset:0;background:rgba(0,0,0,0.35);display:flex;align-items:center;justify-content:center;z-index:50}
+.modal.hidden{display:none}
+.modal-content{background:white;padding:16px;border-radius:8px;min-width:320px;max-width:560px;box-shadow:0 8px 24px rgba(0,0,0,0.15)}
+.modal-content h3{margin:0 0 8px}
+
