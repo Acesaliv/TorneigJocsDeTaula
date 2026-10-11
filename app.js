@@ -1089,116 +1089,147 @@
     dom.btnPrevRound.disabled = t.currentRound <= 1;
     dom.btnNextRound.disabled = t.currentRound >= t.config.numRounds;
 
-    const currentAssignment = t.assignments[t.currentRound - 1];
-    if (!currentAssignment) return;
-
     dom.roundTablesContainer.innerHTML = '';
 
-    // Agrupar jugadors per taula
-    const tables = Array.from({ length: t.config.numTables }, () => []);
-    t.players.forEach((p, idx) => {
-      const tableIdx = currentAssignment[idx];
-      if (tables[tableIdx]) {
-        tables[tableIdx].push({ player: p, playerIndex: idx });
+    const roundsStack = document.createElement('div');
+    roundsStack.className = 'rounds-visual-stack';
+
+    for (let roundIdx = 1; roundIdx <= t.config.numRounds; roundIdx++) {
+      const assignment = t.assignments[roundIdx - 1];
+      if (!assignment) continue;
+
+      const roundBlock = document.createElement('section');
+      roundBlock.className = 'round-visual-block';
+
+      if (roundIdx < t.currentRound) {
+        roundBlock.classList.add('is-past');
+      } else if (roundIdx > t.currentRound) {
+        roundBlock.classList.add('is-future');
+      } else {
+        roundBlock.classList.add('is-current');
       }
-    });
 
-    tables.forEach((tableData, tableIdx) => {
-      const card = document.createElement('div');
-      card.className = 'table-card';
+      const roundHeader = document.createElement('div');
+      roundHeader.className = 'round-visual-header';
 
-      const header = document.createElement('div');
-      header.className = 'table-card-header';
+      const title = document.createElement('div');
+      title.className = 'round-visual-title';
+      title.textContent = `Ronda ${roundIdx}`;
 
-      // Nom del joc a l'esquerra (més visible i destacat)
-      const gameTitle = document.createElement('h3');
-      gameTitle.className = 'table-game-title';
-      gameTitle.textContent = t.config.games[tableIdx] || `Joc ${tableIdx + 1}`;
+      const status = document.createElement('span');
+      status.className = 'round-visual-status';
+      status.textContent = roundIdx === t.currentRound ? 'Activa' : roundIdx < t.currentRound ? 'Passada' : 'Futura';
 
-      // Literal "Taula n" a la dreta (menys destacat)
-      const tableTag = document.createElement('span');
-      tableTag.className = 'table-number-badge';
-      tableTag.textContent = `Taula ${tableIdx + 1}`;
+      roundHeader.appendChild(title);
+      roundHeader.appendChild(status);
+      roundBlock.appendChild(roundHeader);
 
-      header.appendChild(gameTitle);
-      header.appendChild(tableTag);
-      card.appendChild(header);
+      const tablesGrid = document.createElement('div');
+      tablesGrid.className = 'round-visual-grid';
 
-      const seatsList = document.createElement('div');
-      seatsList.className = 'seats-list';
-
-      tableData.forEach((item, seatIdx) => {
-        const p = item.player;
-        const playerIdx = item.playerIndex;
-
-        const row = document.createElement('div');
-        row.className = 'seat-row';
-
-        // Insígnia visual
-        const badgeStyle = BADGE_STYLES[seatIdx % BADGE_STYLES.length];
-        const badge = document.createElement('div');
-        badge.className = `badge-shape ${badgeStyle.shape} ${badgeStyle.color}`;
-        badge.textContent = p.badgeNumber;
-        badge.title = `Seient ${seatIdx + 1}`;
-
-        // Info jugador
-        const info = document.createElement('div');
-        info.className = 'seat-info';
-
-        const name = document.createElement('div');
-        name.className = 'seat-player-name' + (p.isSpecial ? ' special' : '');
-        name.textContent = p.name + (p.isSpecial ? ' ⭐' : '');
-
-        // Indicador si forma part d'una parella
-        const partner = p.pairId ? t.players.find(other => other.id !== p.id && other.pairId === p.pairId) : null;
-        let pairTag = '';
-        if (partner) {
-          pairTag = `<span class="seat-pair-tag">🔗 Parella amb ${partner.name}</span>`;
+      const tables = Array.from({ length: t.config.numTables }, () => []);
+      t.players.forEach((p, idx) => {
+        const tableIdx = assignment[idx];
+        if (tables[tableIdx]) {
+          tables[tableIdx].push({ player: p, playerIndex: idx });
         }
-
-        const meta = document.createElement('div');
-        meta.className = 'seat-pos-label';
-        meta.innerHTML = `Posició ${p.badgeNumber} ${pairTag}`;
-
-        info.appendChild(name);
-        info.appendChild(meta);
-
-        // Input de puntuació
-        const scoreInput = document.createElement('input');
-        scoreInput.type = 'number';
-        scoreInput.step = 'any';
-        scoreInput.placeholder = 'Punts';
-        scoreInput.className = 'seat-score-input';
-        const existingScore = p.scores[t.currentRound - 1];
-        scoreInput.value = existingScore !== null && existingScore !== undefined ? existingScore : '';
-        scoreInput.dataset.playerIdx = playerIdx;
-
-        // Auto-desa en canviar
-        scoreInput.addEventListener('input', () => {
-          const val = scoreInput.value.trim();
-          p.scores[t.currentRound - 1] = val === '' ? null : parseFloat(val);
-          persistTournament();
-          renderLeaderboardView();
-        });
-
-        // Botó d'intercanvi
-        const swapBtn = document.createElement('button');
-        swapBtn.className = 'seat-swap-btn';
-        swapBtn.innerHTML = '⇄';
-        swapBtn.title = 'Intercanviar lloc';
-        swapBtn.addEventListener('click', () => openSwapModal(p.id));
-
-        row.appendChild(badge);
-        row.appendChild(info);
-        row.appendChild(scoreInput);
-        row.appendChild(swapBtn);
-
-        seatsList.appendChild(row);
       });
 
-      card.appendChild(seatsList);
-      dom.roundTablesContainer.appendChild(card);
-    });
+      tables.forEach((tableData, tableIdx) => {
+        const card = document.createElement('div');
+        card.className = 'table-card';
+
+        const header = document.createElement('div');
+        header.className = 'table-card-header';
+
+        const gameTitle = document.createElement('h3');
+        gameTitle.className = 'table-game-title';
+        gameTitle.textContent = t.config.games[tableIdx] || `Joc ${tableIdx + 1}`;
+
+        const tableTag = document.createElement('span');
+        tableTag.className = 'table-number-badge';
+        tableTag.textContent = `Taula ${tableIdx + 1}`;
+
+        header.appendChild(gameTitle);
+        header.appendChild(tableTag);
+        card.appendChild(header);
+
+        const seatsList = document.createElement('div');
+        seatsList.className = 'seats-list';
+
+        tableData.forEach((item, seatIdx) => {
+          const p = item.player;
+          const playerIdx = item.playerIndex;
+
+          const row = document.createElement('div');
+          row.className = 'seat-row';
+
+          const badgeStyle = BADGE_STYLES[seatIdx % BADGE_STYLES.length];
+          const badge = document.createElement('div');
+          badge.className = `badge-shape ${badgeStyle.shape} ${badgeStyle.color}`;
+          badge.textContent = p.badgeNumber;
+          badge.title = `Seient ${seatIdx + 1}`;
+
+          const info = document.createElement('div');
+          info.className = 'seat-info';
+
+          const name = document.createElement('div');
+          name.className = 'seat-player-name' + (p.isSpecial ? ' special' : '');
+          name.textContent = p.name + (p.isSpecial ? ' ⭐' : '');
+
+          const partner = p.pairId ? t.players.find(other => other.id !== p.id && other.pairId === p.pairId) : null;
+          let pairTag = '';
+          if (partner) {
+            pairTag = `<span class="seat-pair-tag">🔗 Parella amb ${partner.name}</span>`;
+          }
+
+          const meta = document.createElement('div');
+          meta.className = 'seat-pos-label';
+          meta.innerHTML = `Posició ${p.badgeNumber} ${pairTag}`;
+
+          info.appendChild(name);
+          info.appendChild(meta);
+
+          const scoreInput = document.createElement('input');
+          scoreInput.type = 'number';
+          scoreInput.step = 'any';
+          scoreInput.placeholder = 'Punts';
+          scoreInput.className = 'seat-score-input';
+          const existingScore = p.scores[roundIdx - 1];
+          scoreInput.value = existingScore !== null && existingScore !== undefined ? existingScore : '';
+          scoreInput.dataset.playerIdx = playerIdx;
+          scoreInput.dataset.roundIdx = String(roundIdx - 1);
+
+          scoreInput.addEventListener('input', () => {
+            const val = scoreInput.value.trim();
+            p.scores[roundIdx - 1] = val === '' ? null : parseFloat(val);
+            persistTournament();
+            renderLeaderboardView();
+          });
+
+          const swapBtn = document.createElement('button');
+          swapBtn.className = 'seat-swap-btn';
+          swapBtn.innerHTML = '⇄';
+          swapBtn.title = 'Intercanviar lloc';
+          swapBtn.addEventListener('click', () => openSwapModal(p.id));
+
+          row.appendChild(badge);
+          row.appendChild(info);
+          row.appendChild(scoreInput);
+          row.appendChild(swapBtn);
+
+          seatsList.appendChild(row);
+        });
+
+        card.appendChild(seatsList);
+        tablesGrid.appendChild(card);
+      });
+
+      roundBlock.appendChild(tablesGrid);
+      roundsStack.appendChild(roundBlock);
+    }
+
+    dom.roundTablesContainer.appendChild(roundsStack);
   }
 
   function changeRound(delta) {
@@ -1216,11 +1247,15 @@
     const inputs = dom.roundTablesContainer.querySelectorAll('.seat-score-input');
     inputs.forEach(input => {
       const idx = parseInt(input.dataset.playerIdx, 10);
+      const roundIdx = Number.parseInt(input.dataset.roundIdx, 10);
+      const targetRoundIndex = Number.isInteger(roundIdx) ? roundIdx : state.tournament.currentRound - 1;
       const val = input.value.trim();
+
       if (state.tournament.players[idx]) {
-        state.tournament.players[idx].scores[state.tournament.currentRound - 1] = val === '' ? null : parseFloat(val);
+        state.tournament.players[idx].scores[targetRoundIndex] = val === '' ? null : parseFloat(val);
       }
     });
+
     persistTournament();
     renderLeaderboardView();
     if (showAlert) {

@@ -2,91 +2,99 @@
   {
     "id": "p1",
     "name": "Marc",
-    "isSpecial": true,
-    "selected": false
+    "isSpecial": false,
+    "selected": true,
+    "pairId": null
   },
   {
     "id": "p14",
     "name": "Laura",
     "isSpecial": false,
-    "selected": false
-  },
-  {
-    "id": "p_1791715776314_oq87",
-    "name": "Toñi",
-    "isSpecial": false,
-    "selected": false
+    "selected": true,
+    "pairId": null
   },
   {
     "id": "p_1791715868361_1c09",
     "name": "Toñi",
     "isSpecial": true,
-    "selected": false
+    "selected": false,
+    "pairId": null
   },
   {
     "id": "p_1791715868361_5wrr",
     "name": "Jaume",
     "isSpecial": true,
-    "selected": false
+    "selected": false,
+    "pairId": null
   },
   {
     "id": "p_1791715868361_gkw0",
     "name": "Guillem",
     "isSpecial": true,
-    "selected": false
+    "selected": true,
+    "pairId": null
   },
   {
     "id": "p_1791715868361_4wft",
     "name": "Marta",
     "isSpecial": false,
-    "selected": false
+    "selected": true,
+    "pairId": null
   },
   {
     "id": "p_1791715868361_qrxc",
     "name": "Miquel",
     "isSpecial": false,
-    "selected": false
+    "selected": true,
+    "pairId": null
   },
   {
     "id": "p_1791715868361_0e5s",
     "name": "Neus",
     "isSpecial": false,
-    "selected": false
+    "selected": true,
+    "pairId": "pair_1791720827034_t6hv"
   },
   {
     "id": "p_1791715868361_76xp",
     "name": "Sergi",
     "isSpecial": false,
-    "selected": false
+    "selected": true,
+    "pairId": "pair_1791720827034_t6hv"
   },
   {
     "id": "p_1791715868361_css0",
     "name": "Mercè",
     "isSpecial": false,
-    "selected": false
+    "selected": true,
+    "pairId": null
   },
   {
     "id": "p_1791715868361_bgla",
     "name": "Manolo",
     "isSpecial": false,
-    "selected": false
+    "selected": true,
+    "pairId": null
   },
   {
     "id": "p_1791715868361_dqqc",
     "name": "Bernat",
     "isSpecial": false,
-    "selected": false
+    "selected": true,
+    "pairId": null
   },
   {
     "id": "p_1791715868361_2rwq",
     "name": "Raquel",
     "isSpecial": false,
-    "selected": false
+    "selected": true,
+    "pairId": "pair_1791720810435_0raj"
   },
   {
     "id": "p_1791715868361_tlos",
     "name": "Miki",
     "isSpecial": false,
-    "selected": false
+    "selected": true,
+    "pairId": "pair_1791720810435_0raj"
   }
 ]
