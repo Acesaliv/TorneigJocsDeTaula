@@ -839,13 +839,20 @@ body {
   align-items: center;
   justify-content: center;
   font-weight: 800;
-  font-size: 0.95rem;
-  color: white;
+  font-size: 1.1rem;
+  line-height: 1;
+  color: #ffffff;
+  border: 2px solid rgba(15, 23, 42, 0.35);
+  box-sizing: border-box;
   flex-shrink: 0;
+  text-shadow: 0 1px 1px rgba(15, 23, 42, 0.2);
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+  color-adjust: exact;
 }
-.badge-shape.square { border-radius: 4px; }
+.badge-shape.square { border-radius: 7px; }
 .badge-shape.circle { border-radius: 50%; }
-.badge-shape.pentagon { clip-path: polygon(50% 0%, 95% 35%, 78% 100%, 22% 100%, 5% 35%); }
+.badge-shape.pentagon { clip-path: polygon(50% 0%, 94% 33%, 78% 100%, 22% 100%, 6% 33%); }
 .badge-shape.diamond { clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%); }
 .badge-shape.hexagon { clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%); }
 
@@ -896,6 +903,94 @@ body {
 .seat-swap-btn:hover {
   background: #e2e8f0;
   color: var(--text-main);
+}
+
+.participant-print-sheet {
+  display: none;
+}
+
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 10mm;
+  }
+
+  body * {
+    visibility: hidden;
+  }
+
+  .participant-print-sheet,
+  .participant-print-sheet * {
+    visibility: visible;
+  }
+
+  .participant-print-sheet {
+    display: block;
+    position: absolute;
+    inset: 0;
+    background: white;
+    padding: 12mm;
+    box-sizing: border-box;
+  }
+
+  .participant-print-header {
+    font-size: 18pt;
+    font-weight: 800;
+    text-align: center;
+    margin-bottom: 8mm;
+    color: #111827;
+  }
+
+  .participant-print-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 5mm;
+    width: 100%;
+    min-height: 240mm;
+  }
+
+  .participant-print-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    min-height: 52mm;
+    padding: 4mm 2mm;
+    border: 1.5px solid #d1d5db;
+    border-radius: 10px;
+    background: #fff;
+    break-inside: avoid;
+    page-break-inside: avoid;
+    box-sizing: border-box;
+  }
+
+  .participant-print-badge {
+    width: 22mm !important;
+    height: 22mm !important;
+    font-size: 16pt !important;
+    line-height: 1 !important;
+    margin-bottom: 4mm;
+    border-width: 3px !important;
+    box-sizing: border-box !important;
+    color: white !important;
+  }
+
+  .participant-print-name {
+    font-size: 14pt;
+    font-weight: 700;
+    color: #111827;
+    line-height: 1.2;
+    word-break: break-word;
+  }
+
+  .participant-print-role {
+    margin-top: 3mm;
+    font-size: 9pt;
+    color: #4b5563;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
 }
 
 /* ==========================================================================

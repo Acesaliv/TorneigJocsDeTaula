@@ -25,12 +25,22 @@
 
   // Formes i colors per a les insígnies visuals
   const BADGE_STYLES = [
-    { shape: 'square', color: 'color-red', symbol: '■' },
-    { shape: 'circle', color: 'color-blue', symbol: '●' },
-    { shape: 'pentagon', color: 'color-green', symbol: '⬟' },
-    { shape: 'diamond', color: 'color-amber', symbol: '◆' },
-    { shape: 'hexagon', color: 'color-purple', symbol: '⬣' },
-    { shape: 'circle', color: 'color-teal', symbol: '◉' }
+    { id: 'style-square-red', shape: 'square', color: 'color-red', symbol: '■' },
+    { id: 'style-circle-blue', shape: 'circle', color: 'color-blue', symbol: '●' },
+    { id: 'style-pentagon-green', shape: 'pentagon', color: 'color-green', symbol: '⬟' },
+    { id: 'style-diamond-amber', shape: 'diamond', color: 'color-amber', symbol: '◆' },
+    { id: 'style-hexagon-purple', shape: 'hexagon', color: 'color-purple', symbol: '⬣' },
+    { id: 'style-circle-teal', shape: 'circle', color: 'color-teal', symbol: '◉' },
+    { id: 'style-square-amber', shape: 'square', color: 'color-amber', symbol: '★' },
+    { id: 'style-circle-red', shape: 'circle', color: 'color-red', symbol: '✦' },
+    { id: 'style-pentagon-blue', shape: 'pentagon', color: 'color-blue', symbol: '✧' },
+    { id: 'style-diamond-green', shape: 'diamond', color: 'color-green', symbol: '✪' },
+    { id: 'style-hexagon-teal', shape: 'hexagon', color: 'color-teal', symbol: '✹' },
+    { id: 'style-square-purple', shape: 'square', color: 'color-purple', symbol: '✚' },
+    { id: 'style-circle-amber', shape: 'circle', color: 'color-amber', symbol: '☼' },
+    { id: 'style-pentagon-red', shape: 'pentagon', color: 'color-red', symbol: '☯' },
+    { id: 'style-diamond-purple', shape: 'diamond', color: 'color-purple', symbol: '✸' },
+    { id: 'style-hexagon-green', shape: 'hexagon', color: 'color-green', symbol: '✶' }
   ];
 
   const state = {
@@ -91,6 +101,9 @@
     dom.btnSaveFile = document.getElementById('btnSaveFile');
     dom.btnLoadExample = document.getElementById('btnLoadExample');
     dom.addParticipantForm = document.getElementById('addParticipantForm');
+    dom.btnGenerateParticipantTemplate = document.getElementById('btnGenerateParticipantTemplate');
+    dom.btnRandomizeSymbolAssignments = document.getElementById('btnRandomizeSymbolAssignments');
+    dom.symbolAssignmentsList = document.getElementById('symbolAssignmentsList');
     dom.playerNameInput = document.getElementById('playerNameInput');
     dom.playerSpecialInput = document.getElementById('playerSpecialInput');
     dom.participantsList = document.getElementById('participantsList');
@@ -237,6 +250,7 @@
     // Configuració del torneig
     dom.tableSizeSelect.addEventListener('change', updateConfigSummary);
     dom.numRoundsInput.addEventListener('change', updateConfigSummary);
+    dom.btnRandomizeSymbolAssignments.addEventListener('click', randomizeSymbolAssignments);
     dom.btnGenerateTournament.addEventListener('click', handleStartTournament);
 
     // Controls de ronda
@@ -244,6 +258,7 @@
     dom.btnNextRound.addEventListener('click', () => changeRound(1));
     dom.btnSaveCurrentScores.addEventListener('click', saveCurrentRoundScores);
     dom.btnProjectorMode.addEventListener('click', toggleProjectorMode);
+    dom.btnGenerateParticipantTemplate.addEventListener('click', generateParticipantPrintTemplate);
 
     // Temporitzador
     dom.btnTimerToggle.addEventListener('click', toggleTimer);
@@ -574,7 +589,9 @@
       name: p.name,
       isSpecial: p.isSpecial,
       selected: p.selected,
-      pairId: p.pairId || null
+      pairId: p.pairId || null,
+      assignedSymbolId: p.assignedSymbolId || p.assignedSymbol || null,
+      assignedSymbol: p.assignedSymbolId || p.assignedSymbol || null
     }));
 
     const jsonString = JSON.stringify(exportData, null, 2);
@@ -589,6 +606,331 @@
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
   }
+
+  function getTableBadgeStyle(tableIndex) {
+    return BADGE_STYLES[tableIndex % BADGE_STYLES.length] || BADGE_STYLES[0];
+  }
+
+  function getSymbolStyleById(symbolId) {
+    return BADGE_STYLES.find(style => style.id === symbolId) || BADGE_STYLES[0];
+  }
+
+  function getAssignedPlayerForSymbol(symbolId) {
+    return getSelectedParticipants().find(player => player.assignedSymbolId === symbolId) || null;
+  }
+
+  function getPlayerDisplayNumber(player, fallbackList = []) {
+    if (player && Number.isInteger(player.badgeNumber) && player.badgeNumber > 0) {
+      return player.badgeNumber;
+    }
+
+    const list = fallbackList.length ? fallbackList : getSelectedParticipants();
+    const index = list.findIndex(item => item.id === player?.id);
+    return index >= 0 ? index + 1 : '?';
+  }
+
+  function assignSymbolToParticipant(symbolId, playerId) {
+    const selected = state.pool.filter(p => p.selected);
+
+    selected.forEach((player) => {
+      if (player.id === playerId) {
+        player.assignedSymbolId = symbolId || null;
+      } else if (symbolId && player.assignedSymbolId === symbolId) {
+        player.assignedSymbolId = null;
+      }
+    });
+
+    persistPool();
+    renderConfigSymbolAssignments();
+  }
+
+  function randomizeSymbolAssignments() {
+    const selected = getSelectedParticipants();
+    if (!selected.length) {
+      alert('Selecciona almenys un participant per assignar símbols aleatoris.');
+      return;
+    }
+
+    const availableStyles = [...BADGE_STYLES];
+    const shuffled = [...selected].sort(() => Math.random() - 0.5);
+
+    selected.forEach(player => {
+      player.assignedSymbolId = null;
+    });
+
+    shuffled.forEach((player, index) => {
+      const style = availableStyles[index % availableStyles.length];
+      player.assignedSymbolId = style.id;
+    });
+
+    persistPool();
+    renderConfigSymbolAssignments();
+  }
+
+  function getInitialRoundTableAssignments() {
+    const selected = getSelectedParticipants();
+    if (!selected.length) return [];
+
+    if (state.tournament.isActive && state.tournament.assignments && state.tournament.assignments[0]) {
+      const initialAssignment = state.tournament.assignments[0];
+      const tableSize = state.tournament.config.tableSize || 4;
+      const tableCount = state.tournament.config.numTables || Math.ceil(selected.length / tableSize);
+
+      return selected.map((player) => {
+        const playerIndex = state.tournament.players.findIndex(p => p.id === player.id);
+        const tableIndex = playerIndex >= 0 ? (initialAssignment[playerIndex] ?? 0) : 0;
+        const badgeStyle = getTableBadgeStyle(tableIndex);
+        const number = state.tournament.players[playerIndex]?.badgeNumber || (selected.findIndex(p => p.id === player.id) + 1);
+        return {
+          player,
+          tableIndex,
+          number,
+          badgeStyle,
+          tableLabel: `Taula ${tableIndex + 1}`
+        };
+      });
+    }
+
+    const tableSize = parseInt(dom.tableSizeSelect?.value || '4', 10);
+    const tableCount = Math.max(1, Math.ceil(selected.length / tableSize));
+
+    return selected.map((player, idx) => {
+      const tableIndex = Math.min(Math.floor(idx / Math.max(1, tableSize)), tableCount - 1);
+      const badgeStyle = getTableBadgeStyle(tableIndex);
+      return {
+        player,
+        tableIndex,
+        number: idx + 1,
+        badgeStyle,
+        tableLabel: `Taula ${tableIndex + 1}`
+      };
+    });
+  }
+
+  function renderConfigSymbolAssignments() {
+    const selected = getSelectedParticipants();
+
+    if (!dom.symbolAssignmentsList) return;
+    dom.symbolAssignmentsList.innerHTML = '';
+
+    if (selected.length === 0) {
+      dom.symbolAssignmentsList.innerHTML = '<p class="text-muted">Selecciona participants per assignar-los els símbols inicials.</p>';
+      dom.btnGenerateParticipantTemplate.disabled = true;
+      if (dom.btnRandomizeSymbolAssignments) dom.btnRandomizeSymbolAssignments.disabled = true;
+      return;
+    }
+
+    const styleOptions = BADGE_STYLES.slice(0, Math.min(selected.length, BADGE_STYLES.length));
+    styleOptions.forEach((style) => {
+      const assignedPlayer = getAssignedPlayerForSymbol(style.id);
+      const assignedNumber = assignedPlayer ? getPlayerDisplayNumber(assignedPlayer, selected) : null;
+      const row = document.createElement('div');
+      row.className = 'symbol-assignment-row';
+
+      const badge = document.createElement('div');
+      badge.className = `badge-shape ${style.shape} ${style.color}`;
+      badge.textContent = assignedNumber ? String(assignedNumber) : '—';
+      badge.title = assignedPlayer ? `Jugador ${assignedNumber}` : `Símbol ${style.id}`;
+
+      const info = document.createElement('div');
+      info.className = 'symbol-assignment-meta';
+      info.innerHTML = `<strong>${assignedPlayer ? `Núm. ${assignedNumber}` : 'Sense assignar'}</strong><div class="text-muted">${assignedPlayer ? 'Assignat' : 'Sense assignar'}</div>`;
+
+      const select = document.createElement('select');
+      select.className = 'form-control symbol-assignment-select';
+      select.dataset.symbolId = style.id;
+      select.title = 'Selecciona el participant assignat a aquest símbol';
+
+      const emptyOption = document.createElement('option');
+      emptyOption.value = '';
+      emptyOption.textContent = '— Sense assignar —';
+      select.appendChild(emptyOption);
+
+      const availablePlayers = selected
+        .filter(player => !player.assignedSymbolId || player.assignedSymbolId === style.id)
+        .sort((a, b) => a.name.localeCompare(b.name));
+
+      availablePlayers.forEach((player) => {
+        const option = document.createElement('option');
+        option.value = player.id;
+        option.textContent = `${player.name}${player.isSpecial ? ' ⭐' : ''}`;
+        if (assignedPlayer && assignedPlayer.id === player.id) {
+          option.selected = true;
+        }
+        select.appendChild(option);
+      });
+
+      if (assignedPlayer) {
+        select.value = assignedPlayer.id;
+      } else {
+        select.value = '';
+      }
+
+      select.addEventListener('change', (event) => {
+        const nextValue = event.target.value;
+        assignSymbolToParticipant(style.id, nextValue || null);
+      });
+
+      row.appendChild(badge);
+      row.appendChild(info);
+      row.appendChild(select);
+      dom.symbolAssignmentsList.appendChild(row);
+    });
+
+    dom.btnGenerateParticipantTemplate.disabled = false;
+    if (dom.btnRandomizeSymbolAssignments) dom.btnRandomizeSymbolAssignments.disabled = false;
+  }
+
+  function generateParticipantPrintTemplate() {
+    const selected = getSelectedParticipants();
+    if (selected.length === 0) {
+      alert('Selecciona almenys un participant per crear la plantilla.');
+      return;
+    }
+
+    const styleByPlayer = new Map();
+    selected.forEach((player, idx) => {
+      if (player.assignedSymbolId) {
+        styleByPlayer.set(player.id, getSymbolStyleById(player.assignedSymbolId));
+      } else {
+        const fallback = BADGE_STYLES[idx % BADGE_STYLES.length];
+        player.assignedSymbolId = fallback.id;
+        styleByPlayer.set(player.id, fallback);
+      }
+    });
+    persistPool();
+
+    const printCards = selected
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .map((player, idx) => {
+        const badgeStyle = styleByPlayer.get(player.id) || BADGE_STYLES[idx % BADGE_STYLES.length];
+        const tableIndex = Math.min(Math.floor(idx / Math.max(1, parseInt(dom.tableSizeSelect?.value || '4', 10))), Math.max(1, Math.ceil(selected.length / Math.max(1, parseInt(dom.tableSizeSelect?.value || '4', 10)))) - 1);
+        return {
+          name: player.name,
+          number: idx + 1,
+          shape: badgeStyle.shape,
+          color: badgeStyle.color,
+          tableLabel: `Taula ${tableIndex + 1}`,
+          special: player.isSpecial
+        };
+      });
+
+    const sheet = document.createElement('div');
+    sheet.className = 'participant-print-sheet';
+    sheet.setAttribute('aria-label', 'Plantilla d’impressió de participants');
+
+    const title = document.createElement('div');
+    title.className = 'participant-print-header';
+    title.textContent = 'Participants assignats';
+
+    const grid = document.createElement('div');
+    grid.className = 'participant-print-grid';
+
+    printCards.forEach((cardData) => {
+      const card = document.createElement('div');
+      card.className = 'participant-print-card';
+
+      const badge = document.createElement('div');
+      badge.className = `badge-shape ${cardData.shape} ${cardData.color} participant-print-badge`;
+      badge.textContent = String(cardData.number);
+      badge.title = `Núm. ${cardData.number}`;
+
+      const num = document.createElement('div');
+      num.className = 'participant-print-number';
+      num.textContent = `Núm. ${cardData.number}`;
+
+      const name = document.createElement('div');
+      name.className = 'participant-print-name';
+      name.textContent = cardData.name;
+
+      const meta = document.createElement('div');
+      meta.className = 'participant-print-meta';
+      meta.textContent = `${cardData.tableLabel} · ${cardData.special ? 'Especial' : 'Participant'}`;
+
+      card.appendChild(badge);
+      card.appendChild(num);
+      card.appendChild(name);
+      card.appendChild(meta);
+      grid.appendChild(card);
+    });
+
+    sheet.appendChild(title);
+    sheet.appendChild(grid);
+
+    const existing = document.querySelector('.participant-print-sheet');
+    if (existing) existing.remove();
+
+    document.body.appendChild(sheet);
+
+    const printableWindow = window.open('', '_blank', 'width=1200,height=950');
+    if (printableWindow) {
+      printableWindow.document.write(`<!DOCTYPE html>
+        <html lang="ca">
+        <head>
+          <meta charset="UTF-8">
+          <title>Participants assignats</title>
+          <style>
+            body { margin: 0; font-family: Arial, sans-serif; background: #f5f7fb; }
+            .participant-print-sheet { display: block; background: white; padding: 12mm; box-sizing: border-box; }
+            .participant-print-header { font-size: 18pt; font-weight: 800; text-align: center; margin-bottom: 8mm; color: #111827; }
+            .participant-print-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 5mm; width: 100%; }
+            .participant-print-card { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; min-height: 52mm; padding: 4mm 2mm; border: 1.5px solid #d1d5db; border-radius: 10px; background: #fff; break-inside: avoid; page-break-inside: avoid; }
+            .badge-shape { width: 22mm; height: 22mm; display: flex; align-items: center; justify-content: center; margin-bottom: 4mm; border: 3px solid rgba(17, 24, 39, 0.35); box-sizing: border-box; font-weight: 800; font-size: 16pt; color: white; -webkit-print-color-adjust: exact; print-color-adjust: exact; color-adjust: exact; }
+            .color-red { background: #ef4444 !important; }
+            .color-blue { background: #3b82f6 !important; }
+            .color-green { background: #22c55e !important; }
+            .color-amber { background: #f59e0b !important; }
+            .color-purple { background: #a855f7 !important; }
+            .color-teal { background: #14b8a6 !important; }
+            .square { border-radius: 8px; }
+            .circle { border-radius: 50%; }
+            .pentagon { clip-path: polygon(50% 0%, 100% 38%, 81% 100%, 19% 100%, 0% 38%); }
+            .diamond { clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%); }
+            .hexagon { clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%); }
+            .participant-print-number { font-size: 10pt; font-weight: 700; color: #374151; margin-bottom: 2mm; }
+            .participant-print-name { font-size: 14pt; font-weight: 700; color: #111827; line-height: 1.2; word-break: break-word; }
+            .participant-print-meta { margin-top: 3mm; font-size: 9pt; color: #4b5563; }
+            @media print { @page { size: A4 portrait; margin: 10mm; } body { background: white; } .participant-print-sheet { box-shadow: none; } }
+          </style>
+        </head>
+        <body>
+          <div class="participant-print-sheet">
+            <div class="participant-print-header">Participants assignats</div>
+            <div class="participant-print-grid">
+              ${printCards.map(card => `
+                <div class="participant-print-card">
+                  <div class="badge-shape ${card.shape} ${card.color}">${card.number}</div>
+                  <div class="participant-print-number">Núm. ${card.number}</div>
+                  <div class="participant-print-name">${card.name}</div>
+                  <div class="participant-print-meta">${card.tableLabel} · ${card.special ? 'Especial' : 'Participant'}</div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        </body>
+        </html>`);
+      printableWindow.document.close();
+      setTimeout(() => {
+        printableWindow.focus();
+        printableWindow.print();
+        setTimeout(() => {
+          try { printableWindow.close(); } catch (e) {}
+          sheet.remove();
+        }, 1200);
+      }, 400);
+      return;
+    }
+
+    if (typeof window !== 'undefined' && window.print) {
+      setTimeout(() => window.print(), 200);
+    }
+
+    setTimeout(() => {
+      sheet.remove();
+    }, 1000);
+  }
+
+  // Carregar fitxer de configuració del disc (JSON o TXT)
 
   // Carregar fitxer de configuració del disc (JSON o TXT)
   function handleFileInput(e) {
@@ -619,7 +961,9 @@
                   name: item.name,
                   isSpecial: Boolean(item.isSpecial),
                   selected: item.selected !== undefined ? Boolean(item.selected) : true,
-                  pairId: item.pairId || null
+                  pairId: item.pairId || null,
+                  assignedSymbolId: item.assignedSymbolId || item.assignedSymbol || null,
+                  assignedSymbol: item.assignedSymbolId || item.assignedSymbol || null
                 };
               }
               return null;
@@ -641,7 +985,9 @@
               name: t,
               isSpecial: isSpecial,
               selected: true,
-              pairId: null
+              pairId: null,
+              assignedSymbolId: null,
+              assignedSymbol: null
             };
           }).filter(Boolean);
         }
@@ -749,6 +1095,7 @@
     });
 
     updateSelectionCounts();
+    renderConfigSymbolAssignments();
   }
 
   function updateSelectionCounts() {
@@ -831,21 +1178,29 @@
     const roundMinutes = parseInt(dom.roundMinutesInput.value, 10) || 45;
     const numTables = Math.ceil(selected.length / tableSize);
 
+    const styleByPlayer = new Map();
+    selected.forEach((player, idx) => {
+      const chosenStyle = player.assignedSymbolId ? getSymbolStyleById(player.assignedSymbolId) : BADGE_STYLES[idx % BADGE_STYLES.length];
+      const validStyle = BADGE_STYLES.find(style => style.id === chosenStyle.id) || BADGE_STYLES[idx % BADGE_STYLES.length];
+      player.assignedSymbolId = validStyle.id;
+      styleByPlayer.set(player.id, validStyle);
+    });
+    persistPool();
+
     // Recollir jocs
     const gameInputs = dom.tableGamesList.querySelectorAll('.table-game-input');
     const games = Array.from(gameInputs).map((inp, idx) => inp.value.trim() || `Joc ${idx + 1}`);
 
-    // Crear llista de jugadors per al torneig actiu amb pairId inclòs
-    const tournamentPlayers = selected.map((p, idx) => {
-      return {
-        id: p.id,
-        name: p.name,
-        isSpecial: Boolean(p.isSpecial),
-        badgeNumber: idx + 1,
-        pairId: p.pairId || null,
-        scores: Array(numRounds).fill(null)
-      };
-    });
+    // Crear llista de jugadors per al torneig actiu amb parells i atributs de participant
+    const tournamentPlayers = selected.map((p, idx) => ({
+      id: p.id,
+      name: p.name,
+      isSpecial: Boolean(p.isSpecial),
+      badgeNumber: idx + 1,
+      badgeStyle: { ...(styleByPlayer.get(p.id) || BADGE_STYLES[idx % BADGE_STYLES.length]) },
+      pairId: p.pairId || null,
+      scores: Array(numRounds).fill(null)
+    }));
 
     state.tournament = {
       isActive: true,
@@ -868,6 +1223,11 @@
       return;
     }
     state.tournament.assignments[0] = r1;
+
+    tournamentPlayers.forEach((player, idx) => {
+      const tableIndex = r1[idx] ?? 0;
+      player.initialTable = tableIndex;
+    });
 
     // Generar la resta de rondes
     for (let r = 1; r < numRounds; r++) {
@@ -1164,11 +1524,11 @@
           const row = document.createElement('div');
           row.className = 'seat-row';
 
-          const badgeStyle = BADGE_STYLES[seatIdx % BADGE_STYLES.length];
+          const badgeStyle = p.badgeStyle || BADGE_STYLES[(p.badgeNumber - 1) % BADGE_STYLES.length];
           const badge = document.createElement('div');
           badge.className = `badge-shape ${badgeStyle.shape} ${badgeStyle.color}`;
-          badge.textContent = p.badgeNumber;
-          badge.title = `Seient ${seatIdx + 1}`;
+          badge.textContent = String(p.badgeNumber);
+          badge.title = `Participant ${p.badgeNumber}`;
 
           const info = document.createElement('div');
           info.className = 'seat-info';
@@ -1185,7 +1545,7 @@
 
           const meta = document.createElement('div');
           meta.className = 'seat-pos-label';
-          meta.innerHTML = `Posició ${p.badgeNumber} ${pairTag}`;
+          meta.innerHTML = `Núm. ${p.badgeNumber} ${pairTag}`;
 
           info.appendChild(name);
           info.appendChild(meta);
